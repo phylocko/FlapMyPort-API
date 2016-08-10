@@ -35,4 +35,4 @@
 
 **Check API:**
 
-  http://isweethome.ihome.ru/api/?check
+  http://<path-to-api>/api/?check
