@@ -32,3 +32,7 @@
 **Get FlapChart Using Start time and End time:**
 
   http://<path-to-api>/?flaphistory&host=192.168.168.21&ifindex=509&start=2016-07-17%2012:01&end=2016-07-17%2014:00:00
+
+**Check API:**
+
+  http://<path-to-api>/api/?check
