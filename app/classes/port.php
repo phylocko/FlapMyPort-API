@@ -16,10 +16,12 @@ Class Port extends defaultClass
 	public $flapCount;
 	public $flaps = array();
 	public $oldestFlapID = 0;
+	public $raw = array();
 
-	function __construct($r)
+	function __construct($r, $raw)
 	{
 		$this->r = $r;
+		$this->raw = $raw;
 		$this->times = $this->r->get('times');
 		$this->timeStart = $this->times->getTimeStartString();
 		$this->timeEnd = $this->times->getTimeEndString();
@@ -32,47 +34,62 @@ Class Port extends defaultClass
 
 	public function getFlapCount()
 	{
-		$q = "SELECT COUNT(id) FROM `ports` 
-			WHERE `ifIndex` = '$this->ifIndex'
-			AND `host` = '$this->ipaddress'
-			AND `time` > '$this->timeStart' AND `time` < '$this->timeEnd';";
+		$i = 0;
 
-		$db = $this->r->get('db');
-		$data = $db->query($q);
-		$this->flapCount = $data->fetchColumn();
+		foreach ($this->raw as $rawString)
+		{
+			if ($rawString['host'] == $this->ipaddress AND $rawString['ifIndex'] == $this->ifIndex)
+			{
+				$i++;
+			}
+		}
+
+		$this->flapCount = (string) $i;
 	}
 	public function getFirstFlap()
 	{
-		$q = "SELECT `time` FROM `ports` 
-			WHERE `ifIndex` = '$this->ifIndex'
-			AND `host` = '$this->ipaddress'
-			AND `time` > '$this->timeStart'
-			ORDER BY `time` ASC LIMIT 1;";
 
-		$db = $this->r->get('db');
-		$data = $db->query($q);
-		$d = $data->fetch(PDO::FETCH_NAMED);
-		$this->firstFlapTime = $d['time'];
+		$minDate = 0;
+
+		foreach ($this->raw as $rawString)
+		{
+			if($rawString['host'] == $this->ipaddress AND $rawString['ifIndex'] == $this->ifIndex)
+			{
+				$date = new DateTime($rawString['time']);
+				if ( is_numeric($minDate) || $minDate->getTimestamp() > $date->getTimestamp())
+				{
+					$minDate = $date;
+					$this->firstFlapTime = $rawString['time'];
+				}
+			}
+		}
 	}
 
 	public function getLastFlapAndOperStatusAndOldestFlapID()
 	{
-		$q = "SELECT `id`,`time`, `ifOperStatus` FROM `ports` 
-			WHERE `ifIndex` = '$this->ifIndex'
-			AND `host` = '$this->ipaddress'
-			AND `time` < '$this->timeEnd'
-			ORDER BY `time` DESC LIMIT 1;";
 
-		$db = $this->r->get('db');
-		$data = $db->query($q);
-		$d = $data->fetch(PDO::FETCH_NAMED);
-		$this->lastFlapTime = $d['time'];
-		$this->ifOperStatus = $d['ifOperStatus'];
-		if($d['id'] > $this->oldestFlapID)
+		$maxDate = 0;
+
+		foreach ($this->raw as $rawString)
 		{
-			$this->oldestFlapID = $d['id'];
+			if($rawString['host'] == $this->ipaddress AND $rawString['ifIndex'] == $this->ifIndex)
+			{
+				$date = new DateTime($rawString['time']);
+				if ( is_numeric($maxDate) || $maxDate->getTimestamp() < $date->getTimestamp())
+				{
+					$maxDate = $date;
+					$this->lastFlapTime = $rawString['time'];
+					$this->ifOperStatus = $rawString['ifOperStatus'];
+					if ($rawString['id'] > $this->oldestFlapID )
+					{
+						$this->oldestFlapID = $rawString['id'];
+					}
+				}
+			}
 		}
+
 	}
+	
 	public function fetchFlaps()
 	{
 		$q = "SELECT `time`, `ifOperStatus` FROM `ports`

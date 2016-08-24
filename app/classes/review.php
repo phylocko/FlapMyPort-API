@@ -8,6 +8,7 @@ Class Review extends defaultClass
 	private $timeEnd;
 	private $r;
 	private $filter;
+	private $raw = array();
 
 	function __construct($r)
 	{
@@ -67,16 +68,16 @@ Class Review extends defaultClass
 		$this->params['lastFlapTime'] = $endCandidate->format('Y-m-d H:i:s');
 	}
 
-	public function getHosts()
+
+	public function getRaw()
 	{
 		$timeStart = $this->times->getTimeStartString();
 		$timeEnd = $this->times->getTimeEndString();
 
-		$q = "SELECT `hostname`, `host` 
+		$q = "SELECT * 
 			FROM `ports` WHERE `time` > '$timeStart' AND `time` < '$timeEnd'
 			AND `ifName` not like '%.%'
-			$this->filter
-			GROUP BY `host`;";
+			$this->filter;";
 
 
 		$db = $this->r->get('db');
@@ -87,7 +88,26 @@ Class Review extends defaultClass
 
 		while($d = $data->fetch(PDO::FETCH_NAMED))
 		{
-			$host = new Host($this->r);
+			$this->raw[] = $d;
+		}
+	}
+
+	public function getHosts()
+	{
+		$this->getRaw();
+		$hosts_array = array();
+
+		foreach ($this->raw as $rawString)
+		{
+			if ($this->hostAlreadyExists($rawString, $hosts_array) == false)
+			{
+				$hosts_array[] = $rawString;
+			}
+		}
+
+		foreach ($hosts_array as $d)
+		{
+			$host = new Host($this->r, $this->raw);
 			$host->setFilter($this->filter);
 			$host->name = $d['hostname'];
 			$host->ipaddress = $d['host'];
@@ -95,6 +115,21 @@ Class Review extends defaultClass
 		}
 
 	}
+
+	private function hostAlreadyExists($raw_string, $hosts_array)
+	{
+		foreach ($hosts_array as $host_array)
+		{
+			if ( $host_array['host'] == $raw_string['host'])
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+
 	function fetchHostsPorts()
 	{
 		foreach ($this->hosts as $host)

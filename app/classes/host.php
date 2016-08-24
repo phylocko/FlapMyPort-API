@@ -10,9 +10,10 @@ Class Host extends defaultClass
 	public $timeEnd;
 	private $filter;
 
-	function __construct($r)
+	function __construct($r, $raw)
 	{
 		$this->r = $r;
+		$this->raw = $raw;
 		$this->times = $this->r->get('times');
 		$this->timeStart = $this->times->getTimeStartString();
 		$this->timeEnd = $this->times->getTimeEndString();
@@ -23,25 +24,38 @@ Class Host extends defaultClass
 		$this->filter = $filter;
 	}
 
+	private function portAlreadyExists($rawString, $ports_array)
+	{
+		foreach ($ports_array as $port_array)
+		{
+			if( $port_array['ifIndex'] == $rawString['ifIndex'])
+			{
+				return true;
+			}
+		}
+		return false;
+
+	}
+
 	public function fetchPorts()
 	{
-		$q = "SELECT `id`, `time` , `ifName`, `ifAlias`, `ifIndex`, `ifOperStatus` FROM `ports`
-			WHERE `host` = '$this->ipaddress' AND `time` > '$this->timeStart'
-			AND `time` < '$this->timeEnd'
-			AND `ifName` not like '%.%'
-			$this->filter
-			GROUP BY `ifIndex`
-			ORDER BY `time` DESC;";
 
-		$db = $this->r->get('db');
-		if(!$data = $db->query($q))
+		$ports_array = array();
+
+		foreach ($this->raw as $rawString)
 		{
-			print_r($db->errorInfo());
+			if($rawString['host'] == $this->ipaddress)
+			{
+				if ($this->portAlreadyExists($rawString, $ports_array) == false)
+				{
+					$ports_array[] = $rawString;
+				}
+			}
 		}
 
-		while($d = $data->fetch(PDO::FETCH_NAMED))
+		foreach ( $ports_array as $d)
 		{
-			$port                   = new Port($this->r);
+			$port                   = new Port($this->r, $this->raw);
 			$port->ipaddress	= $this->ipaddress;
 			$port->ifIndex          = $d['ifIndex'];
 			$port->ifName           = $d['ifName'];

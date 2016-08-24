@@ -52,13 +52,14 @@ if(isset($_GET['flapchart']) || isset($_GET['flaphistory']) )
 		if(isset($_GET['host']))
 		{
 			$ifIndex = $_GET['ifindex'];
-			$port = new Port($r);
+			$port = new Port($r, 0);
 			$port->ipaddress = $_GET['host'];
 			$port->ifIndex = $ifIndex;
 			$port->fetchFlaps();
 			if ( isset($_GET['flapchart']) )
 			{
 				$port->flapChart();
+				die();
 			}
 			else
 			{
@@ -103,8 +104,8 @@ if(isset($_GET['format']))
 }
 else
 {
-	header('Content-Type: text/html; charset=utf-8');
-	header("Content-length: ".strlen(json_encode($output)));
+	#header('Content-Type: text/html; charset=utf-8');
+	#header("Content-length: ".strlen(json_encode($output)));
 	echo json_encode($output);
 }
 
