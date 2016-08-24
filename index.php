@@ -79,7 +79,7 @@ if(isset($_GET['flapchart']) || isset($_GET['flaphistory']) )
 else
 if(isset($_GET['check']))
 {
-	sleep(2);
+	sleep(1);
 	$output = array('checkResult' => "flapmyport");
 }
 
@@ -103,6 +103,8 @@ if(isset($_GET['format']))
 }
 else
 {
+	header('Content-Type: text/html; charset=utf-8');
+	header("Content-length: ".strlen(json_encode($output)));
 	echo json_encode($output);
 }
 
