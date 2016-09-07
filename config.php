@@ -1,9 +1,9 @@
 <?php
 
-define("LOG_LEVEL", 1);
+define("LOG_LEVEL", 0);
 
-$dbname = "traps";
-$dbuser = "trap";
-$dbpassword = "0o9i8u";
+$dbname = "YouDatabaseName";
+$dbuser = "youDBUserName";
+$dbpassword = "YouDaabasePassword";
 
 ?>

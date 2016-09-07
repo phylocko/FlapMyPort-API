@@ -77,7 +77,7 @@ Class Review extends defaultClass
 		$q = "SELECT * 
 			FROM `ports` WHERE `time` > '$timeStart' AND `time` < '$timeEnd'
 			AND `ifName` not like '%.%'
-			$this->filter;";
+			$this->filter LIMIT " . sql_limit . ";";
 
 
 		$db = $this->r->get('db');

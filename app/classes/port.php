@@ -69,14 +69,16 @@ Class Port extends defaultClass
 	{
 
 		$maxDate = 0;
+		$maxID = 0;
 
 		foreach ($this->raw as $rawString)
 		{
 			if($rawString['host'] == $this->ipaddress AND $rawString['ifIndex'] == $this->ifIndex)
 			{
 				$date = new DateTime($rawString['time']);
-				if ( is_numeric($maxDate) || $maxDate->getTimestamp() < $date->getTimestamp())
+				if($rawString['id'] > $maxID)
 				{
+					$maxID = $rawString['id'];
 					$maxDate = $date;
 					$this->lastFlapTime = $rawString['time'];
 					$this->ifOperStatus = $rawString['ifOperStatus'];
